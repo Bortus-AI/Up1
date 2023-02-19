@@ -13,7 +13,7 @@ var tmp = require('tmp');
 // Different headers can be pushed depending on data format
 // to allow for changes with backwards compatibility
 var UP1_HEADERS = {
-    v1: new Buffer.from("UP1\0", 'binary')
+    v1: Buffer.from("UP1\0", 'binary')
 }
 
 var makeident = function(){
