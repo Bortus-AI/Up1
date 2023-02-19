@@ -7,6 +7,9 @@
     "type": "git",
     "url": "git://github.com/upload/up1"
   },
+  "scripts": {
+    "serve": "node server.js"
+  },
   "author": "The Up1 Authors",
   "license": "MIT",
   "bugs": {
