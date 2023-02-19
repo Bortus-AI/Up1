@@ -42,36 +42,74 @@ function handle_upload(req, res) {
             var fstream = fs.createWriteStream('', {fd: ftmp.fd, defaultEncoding: 'binary'});
             fstream.write(UP1_HEADERS.v1, 'binary', () => file.pipe(fstream));
         } catch (err) {
-            console.error("Error on file:", err);
-            res.send("Internal Server Error");
+                if (res.json) {
+                    res.json({ code: code, error: err });
+                }
+
+                if (req.unpipe) {
             req.unpipe(busboy);
+                }
+
+                if (res.close) {
             res.close();
+                }
+            }
         }
     });
 
     busboy.on('finish', function() {
         try {
             if (!tmpfname) {
-                res.send("Internal Server Error");
+
+                res.json({
+                    code : code,
+                    error : "Internal Server Error"
+                });
+
             } else if (fields.api_key !== config['api_key']) {
-                res.send('{"error": "API key doesn\'t match", "code": 2}');
+
+                code = 408
+
+                res.json({
+                    code : code,
+                    error : "API key doesn\'t match"
+                });
+
             } else if (!fields.ident) {
-                res.send('{"error": "Ident not provided", "code": 11}');
-            } else if (fields.ident.length !== 22) {
-                res.send('{"error": "Ident length is incorrect", "code": 3}');
+
+                res.json({
+                    code : code,
+                    error : "Ident not provided"
+                });
+
             } else if (ident_exists(fields.ident)) {
-                res.send('{"error": "Ident is already taken.", "code": 4}');
+                res.json({
+                    code : code,
+                    error : "Ident is already taken"
+                });
+
             } else {
                 var delhmac = crypto.createHmac('sha256', config.delete_key)
                                     .update(fields.ident)
                                     .digest('hex');
                 fs.rename(tmpfname, ident_path(fields.ident), function() {
-                    res.json({delkey: delhmac});
+                    code = 200
+                    res.status(200)
+                    res.json({
+                        data : {
+                            ident : fields.ident,
+                            delkey: delhmac,
+
+                        },
+                        success : true
+                    });
                 });
             }
         } catch (err) {
-            console.error("Error on finish:", err);
-            res.send("Internal Server Error");
+            res.json({
+                code : code,
+                error : err
+            });
         }
     });
 
