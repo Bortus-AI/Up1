@@ -1,3 +1,6 @@
+/.idea
+.DS_Store
+
 i/
 server.conf
 config.js
