@@ -27,31 +27,74 @@ function handle_upload(req, res) {
         }
     });
 
-    var fields = {};
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    var code = 500
+    var fields = {
+        ident: makeident(),
+    };
     var tmpfname = null;
 
+    res.status(code);
+
     busboy.on('field', function(fieldname, value) {
+        if (fieldname === 'ident') {
+            return;
+        }
+
         fields[fieldname] = value;
-    });
 
-    busboy.on('file', function(fieldname, file, filename) {
-        try {
-            var ftmp = tmp.fileSync({ postfix: '.tmp', dir: req.app.locals.config.path.i, keep: true });
-            tmpfname = ftmp.name;
+        if (fieldname === 'file') {
+            try {
+                var decoded = Base64.decode(value);
 
-            var fstream = fs.createWriteStream('', {fd: ftmp.fd, defaultEncoding: 'binary'});
-            fstream.write(UP1_HEADERS.v1, 'binary', () => file.pipe(fstream));
-        } catch (err) {
+                var extension = undefined;
+                var lowerCase = decoded.toLowerCase();
+
+                if (lowerCase.indexOf("png") !== -1) {
+                    extension = "png";
+                }
+
+                if (lowerCase.indexOf("jpg") !== -1 || lowerCase.indexOf("jpeg") !== -1) {
+                    extension = "jpg";
+                }
+
+                if (lowerCase.indexOf("gif") !== -1) {
+                    extension = "gif";
+                }
+
+                if (lowerCase.indexOf("jfif") !== -1) {
+                    extension = "jfif";
+                }
+
+                if (!extension) {
+                    throw new Error('bad extension');
+                }
+
+                fields.ident = fields.ident + '.' + extension;
+
+                var ftmp = tmp.fileSync({ postfix: '.tmp', dir: req.app.locals.config.path.i2, keep: true });
+                tmpfname = ftmp.name;
+
+                var fstream = fs.createWriteStream('', {
+                    fd: ftmp.fd,
+                    defaultEncoding: 'binary',
+                });
+
+                var bf = Buffer.from(value, 'base64');
+
+                fstream.write(bf);
+            } catch (err) {
                 if (res.json) {
                     res.json({ code: code, error: err });
                 }
 
                 if (req.unpipe) {
-            req.unpipe(busboy);
+                    req.unpipe(busboy);
                 }
 
                 if (res.close) {
-            res.close();
+                    res.close();
                 }
             }
         }
