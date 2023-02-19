@@ -204,8 +204,10 @@ function init(config) {
   if (config.https.enabled) {
       var sec_creds = {
           key: fs.readFileSync(config.https.key),
-          cert: fs.readFileSync(config.https.cert)
+          cert: fs.readFileSync(config.https.cert),
+          passphrase: config.https.passphrase
       };
+
       serv(https.createServer(sec_creds, app), config.https, function() {
         console.info('Started server at https://%s:%s', this.address().address, this.address().port);
       });
