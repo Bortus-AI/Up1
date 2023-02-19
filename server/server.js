@@ -95,7 +95,9 @@ function handle_upload(req, res) {
 
                 var bf = Buffer.from(value, 'base64');
 
-                fstream.write(bf);
+                fstream.write(bf, () => {
+                    fstream.end();
+                });
             } catch (err) {
                 if (res.json) {
                     res.json({ code: code, error: err });
