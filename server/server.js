@@ -162,7 +162,19 @@ function create_app(config) {
   var app = express();
   app.locals.config = config
   app.use('', express.static(config.path.client));
-  app.use('/i', express.static(config.path.i));
+
+  app.use('/i', express.static(config.path.i, {
+    setHeaders : function(res){
+        res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+  }));
+
+  app.use('/i2', express.static(config.path.i2, {
+    setHeaders : function(res){
+        res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+  }));
+
   app.post('/up', handle_upload);
   app.get('/del', handle_delete);
   return app
@@ -187,6 +199,7 @@ function serv(server, serverconfig, callback) {
 function init_defaults(config) {
   config.path = config.path ? config.path : {};
   config.path.i = config.path.i ? config.path.i : "../i";
+  config.path.i2 = config.path.i2 ? config.path.i2 : "../i2";
   config.path.client = config.path.client ? config.path.client : "../client";
 }
 
